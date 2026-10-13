@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="بوابة الخدمات">
 <meta name="theme-color" content="#0d6e6e">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/portal-manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/icon-192.png">
 <title>بوابة الخدمات</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
@@ -61,6 +65,25 @@ ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:
 .alert .go2{margin-inline-start:auto;font-weight:600;color:#9a5b00;white-space:nowrap}
 @media (prefers-color-scheme:dark){.alert{background:#3a2b14;color:#e4eeee;border-color:#f2b45a}.alert b,.alert .go2{color:#f2b45a}}
 .stat{font-size:.85rem;color:var(--accent);background:var(--soft);padding:2px 10px;border-radius:99px;align-self:flex-start}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit}
+.st b{display:block;font-size:1.7rem;line-height:1.2;color:var(--accent);font-variant-numeric:tabular-nums}
+.st span{font-size:.85rem;color:var(--muted)}
+.st.hot b{color:#b3261e}
+@media (prefers-color-scheme:dark){.st.hot b{color:#f2867d}}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.links{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.links h2{margin:0 0 4px;font-size:1.3rem}
+.links .sub{margin:0;color:var(--muted);font-size:.88rem}
+.lk{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lk .l{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border-radius:10px;padding:2px 4px 2px 12px}
+.lk .l a{color:var(--accent);font-weight:600;text-decoration:none;padding:6px 0}
+.lk .l button{border:0;background:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:4px 8px}
+.ladd{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ladd input{flex:1 1 180px;min-width:0;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.ladd input.u{direction:ltr;text-align:right}
+.lerr{color:#b3261e;font-size:.85rem;margin:6px 0 0}
 @media (prefers-reduced-motion:reduce){a.tile{transition:none}}
 </style>
 </head>
@@ -72,6 +95,12 @@ ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:
     <p>اختر الخدمة اللي تبيها</p>
   </header>
   <a class="alert" id="due" href="/" hidden></a>
+  <section class="stats" aria-label="ملخص البلاغات">
+    <a class="st" href="/"><b id="s-open">0</b><span>بلاغ مفتوح</span></a>
+    <a class="st" id="s-due-box" href="/"><b id="s-due">0</b><span>تذكير مستحق</span></a>
+    <a class="st" href="/"><b id="s-today">0</b><span>سُجّل اليوم</span></a>
+    <a class="st" href="/"><b id="s-closed">0</b><span>بلاغ مغلق</span></a>
+  </section>
   <main class="grid">
     <a class="tile" href="/">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="M9 12h6M9 16h4"/></svg></span>
@@ -99,6 +128,17 @@ ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:
     <div class="sugg" id="sugg"></div>
     <div class="grp"><h3>مهام يومية متكررة</h3><ul class="tl" id="ld"></ul></div>
     <div class="grp"><h3>مهام اليوم</h3><ul class="tl" id="lo"></ul></div>
+  </section>
+  <section class="links" aria-labelledby="lt">
+    <h2 id="lt">روابط سريعة</h2>
+    <p class="sub">روابطك اللي تفتحها كل يوم، مثل البريد والأنظمة الداخلية.</p>
+    <div class="lk" id="lk"></div>
+    <form class="ladd" id="laddf" autocomplete="off" novalidate>
+      <input type="text" id="lname" placeholder="اسم الرابط، مثل: بريد الوزارة" aria-label="اسم الرابط">
+      <input type="url" class="u" id="lurl" placeholder="https://" aria-label="الرابط" inputmode="url">
+      <button class="btn" type="submit">إضافة</button>
+    </form>
+    <p class="lerr" id="lerr" hidden></p>
   </section>
   <footer>جميع الحقوق محفوظة © م. سعد حاكم الرويلي 2026</footer>
 </div>
@@ -156,12 +196,42 @@ render();setInterval(render,60000);
 <script>
 (function(){
   let B=[];try{B=JSON.parse(localStorage.getItem("balaghati-data"))||[]}catch(_){}
-  if(!Array.isArray(B)||!B.length)return;
+  if(!Array.isArray(B))B=[];
+  const iso=new Date().toISOString().slice(0,10),t0=new Date();t0.setHours(0,0,0,0);
+  const dueN=B.filter(b=>b&&b.hala==="TATHKEER"&&(!b.tarikh||new Date(b.tarikh+"T00:00:00")<=t0)).length;
+  document.getElementById("s-open").textContent=B.filter(b=>b&&b.hala!=="MOGHLAQ").length;
+  document.getElementById("s-due").textContent=dueN;
+  if(dueN)document.getElementById("s-due-box").classList.add("hot");
+  document.getElementById("s-today").textContent=B.filter(b=>b&&b.createdAt===iso).length;
+  document.getElementById("s-closed").textContent=B.filter(b=>b&&b.hala==="MOGHLAQ").length;
+  if(!B.length)return;
   const t=new Date();t.setHours(0,0,0,0);
   const due=B.filter(b=>b&&b.hala==="TATHKEER"&&(!b.tarikh||new Date(b.tarikh+"T00:00:00")<=t)).length;
   const open=B.filter(b=>b&&b.hala!=="MOGHLAQ").length;
   const s=document.getElementById("bstat");s.textContent=`${open} بلاغ مفتوح`;s.hidden=false;
   if(due){const a=document.getElementById("due");a.innerHTML=`<span>لديك <b>${due}</b> ${due===1?"بلاغ يحتاج تذكير":"بلاغات تحتاج تذكير"} اليوم</span><span class="go2">فتح بلاغاتي ←</span>`;a.hidden=false}
+})();
+</script>
+
+<script>
+(function(){
+  const K="bawaba-links",$=s=>document.getElementById(s);
+  const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  let L=[];try{L=JSON.parse(localStorage.getItem(K))||[]}catch(_){}
+  if(!Array.isArray(L))L=[];
+  const save=()=>{try{localStorage.setItem(K,JSON.stringify(L))}catch(_){}};
+  function render(){
+    $("lk").innerHTML=L.length?L.map((l,i)=>`<span class="l"><a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.n)}</a><button type="button" data-i="${i}" aria-label="حذف ${esc(l.n)}">×</button></span>`).join(""):`<span class="sub">ما أضفت روابط بعد. اكتب الاسم والرابط واضغط «إضافة».</span>`;
+  }
+  $("laddf").addEventListener("submit",e=>{e.preventDefault();
+    let n=$("lname").value.trim(),u=$("lurl").value.trim();const er=$("lerr");
+    if(u&&!/^https?:\/\//i.test(u))u="https://"+u;
+    let ok=false;try{ok=!!new URL(u).hostname}catch(_){}
+    if(!n||!ok){er.textContent=!n?"اكتب اسم الرابط.":"الرابط غير صحيح.";er.hidden=false;return}
+    er.hidden=true;L.push({n,u});save();render();$("lname").value="";$("lurl").value="";$("lname").focus();
+  });
+  $("lk").addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(!b)return;L.splice(+b.dataset.i,1);save();render()});
+  render();
 })();
 </script>
 </body>
