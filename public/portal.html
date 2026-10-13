@@ -209,7 +209,7 @@ function toCal(t){
     "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+tx,"TRIGGER:PT0M","END:VALARM","END:VEVENT","END:VCALENDAR");
   const ics=L.join("\r\n");
   const ios=/iP(ad|hone|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-  if(ios){location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);return}
+  if(ios){location.href="/api/ics?t="+encodeURIComponent(t.text)+"&s="+u(st)+(t.kind==="daily"?"&r=1":"");return}
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));
   a.download="مهمة.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
 }
