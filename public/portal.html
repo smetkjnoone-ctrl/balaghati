@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -220,12 +221,14 @@ render();setInterval(render,60000);
   let L=[];try{L=JSON.parse(localStorage.getItem(K))||[]}catch(_){}
   if(!Array.isArray(L))L=[];
   const save=()=>{try{localStorage.setItem(K,JSON.stringify(L))}catch(_){}};
+  function cleanU(t){t=String(t||"").trim();const m=t.match(/https?:\/\/[^\s"'<>]+/i);let u=m?m[0]:(t.split(/\s+/)[0]||"");
+    u=u.replace(/[.,،؛)\]]+$/,"");if(u&&!/^https?:\/\//i.test(u))u="https://"+u;return u}
+  L=L.map(l=>({n:l.n,u:cleanU(l.u)}));try{save()}catch(_){}
   function render(){
-    $("lk").innerHTML=L.length?L.map((l,i)=>`<span class="l"><a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.n)}</a><button type="button" data-i="${i}" aria-label="حذف ${esc(l.n)}">×</button></span>`).join(""):`<span class="sub">ما أضفت روابط بعد. اكتب الاسم والرابط واضغط «إضافة».</span>`;
+    $("lk").innerHTML=L.length?L.map((l,i)=>`<span class="l"><a href="${esc(l.u)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">${esc(l.n)}</a><button type="button" data-i="${i}" aria-label="حذف ${esc(l.n)}">×</button></span>`).join(""):`<span class="sub">ما أضفت روابط بعد. اكتب الاسم والرابط واضغط «إضافة».</span>`;
   }
   $("laddf").addEventListener("submit",e=>{e.preventDefault();
-    let n=$("lname").value.trim(),u=$("lurl").value.trim();const er=$("lerr");
-    if(u&&!/^https?:\/\//i.test(u))u="https://"+u;
+    let n=$("lname").value.trim(),u=cleanU($("lurl").value);const er=$("lerr");
     let ok=false;try{ok=!!new URL(u).hostname}catch(_){}
     if(!n||!ok){er.textContent=!n?"اكتب اسم الرابط.":"الرابط غير صحيح.";er.hidden=false;return}
     er.hidden=true;L.push({n,u});save();render();$("lname").value="";$("lurl").value="";$("lname").focus();
