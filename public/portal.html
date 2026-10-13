@@ -57,6 +57,8 @@ ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:
 .tl li.done .tx{text-decoration:line-through;color:var(--muted)}
 .tl .tm{font-size:.8rem;color:var(--accent);background:var(--soft);padding:1px 8px;border-radius:99px;flex:none}
 .tl .late{color:#b3261e;background:#fbe9e7}
+.tl .cal{border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:8px;cursor:pointer;padding:3px 6px;flex:none;display:inline-flex;align-items:center}
+.tl .cal svg{width:16px;height:16px}
 .tl .x{border:0;background:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none}
 .empty{color:var(--muted);font-size:.88rem;padding:6px 2px}
 
@@ -163,7 +165,7 @@ function fmtDate(){
 function isDone(t){return t.kind==="daily"?t.doneOn===day():!!t.done}
 function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
 function li(t){const dn=isDone(t),late=t.time&&!dn&&t.time<nowHM();
-  return `<li class="${dn?"done":""}" data-id="${t.id}"><input type="checkbox" ${dn?"checked":""} aria-label="تم"><span class="tx">${esc(t.text)}</span>${t.time?`<span class="tm${late?" late":""}">${esc(t.time)}</span>`:""}<button class="x" type="button" aria-label="حذف المهمة">×</button></li>`}
+  return `<li class="${dn?"done":""}" data-id="${t.id}"><input type="checkbox" ${dn?"checked":""} aria-label="تم"><span class="tx">${esc(t.text)}</span>${t.time?`<span class="tm${late?" late":""}">${esc(t.time)}</span>`:""}${dn?"":`<button class="cal" type="button" aria-label="إضافة للتقويم" title="إضافة للتقويم"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 13v5M9.5 15.5h5"/></svg></button>`}<button class="x" type="button" aria-label="حذف المهمة">×</button></li>`}
 function render(){
   $("#today").textContent=fmtDate();
   const today=day();
@@ -186,11 +188,31 @@ $("#addf").addEventListener("submit",e=>{e.preventDefault();const v=$("#tin").va
 document.addEventListener("click",e=>{
   const s=e.target.closest("[data-s]");if(s){S.tasks.push({id:Date.now().toString(36),text:s.dataset.s,kind:"daily",time:""});render();return}
   const l=e.target.closest(".tl li[data-id]");if(!l)return;const t=S.tasks.find(x=>x.id===l.dataset.id);if(!t)return;
+  if(e.target.closest(".cal")){toCal(t);return}
   if(e.target.closest(".x")){S.tasks=S.tasks.filter(x=>x!==t);render();return}
   if(e.target.matches("input[type=checkbox]")){
     if(t.kind==="daily")t.doneOn=e.target.checked?day():"";else{t.done=e.target.checked;t.doneOn=e.target.checked?day():""}
     render()}
 });
+function toCal(t){
+  const p=n=>String(n).padStart(2,"0"),now=new Date();let st=new Date();
+  if(t.time){const[h,m]=t.time.split(":");st.setHours(+h,+m,0,0)}else{st.setHours(now.getHours()+1,0,0,0)}
+  if(t.kind!=="daily"&&st<now)st.setDate(st.getDate()+1);
+  const en=new Date(st.getTime()+30*60000);
+  const u=d=>d.getUTCFullYear()+p(d.getUTCMonth()+1)+p(d.getUTCDate())+"T"+p(d.getUTCHours())+p(d.getUTCMinutes())+"00Z";
+  const tx=String(t.text).replace(/[\\;,]/g,c=>"\\"+c).replace(/\n/g," ");
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//bawaba//ar","CALSCALE:GREGORIAN","METHOD:PUBLISH","BEGIN:VEVENT",
+    "UID:"+t.id+"-"+Date.now()+"@bawaba","DTSTAMP:"+u(now),"DTSTART:"+u(st),"DTEND:"+u(en),"SUMMARY:"+tx,
+    "DESCRIPTION:مهمة من بوابة الخدمات"];
+  if(t.kind==="daily")L.push("RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH");
+  L.push("BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+tx,"TRIGGER:-PT10M","END:VALARM",
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+tx,"TRIGGER:PT0M","END:VALARM","END:VEVENT","END:VCALENDAR");
+  const ics=L.join("\r\n");
+  const ios=/iP(ad|hone|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  if(ios){location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));
+  a.download="مهمة.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
 render();setInterval(render,60000);
 })();
 </script>
