@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="بوابة الخدمات">
+<meta name="theme-color" content="#0d6e6e">
+<title>بوابة الخدمات</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#f3f6f6;--surface:#fff;--fg:#13292b;--muted:#5d7173;--line:#dbe4e4;--accent:#0d6e6e;--soft:#e2f1f0;--f:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1819;--surface:#162324;--fg:#e4eeee;--muted:#93a8aa;--line:#24393a;--accent:#4fc2bd;--soft:#183a3a;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);line-height:1.6;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:48px 32px;min-height:100vh;display:flex;flex-direction:column}
+header{margin-bottom:28px}
+.k{color:var(--accent);font-size:.9rem;font-weight:600}
+h1{font-size:2rem;margin:4px 0 6px}
+header p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+a.tile{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;transition:border-color .15s,transform .15s}
+a.tile:hover,a.tile:focus-visible{border-color:var(--accent);transform:translateY(-2px);outline:none}
+.ic{width:52px;height:52px;border-radius:14px;background:var(--soft);color:var(--accent);display:grid;place-items:center}
+.ic svg{width:28px;height:28px}
+.tile h2{margin:0;font-size:1.3rem}
+.tile p{margin:0;color:var(--muted);font-size:.95rem}
+.go{margin-top:auto;color:var(--accent);font-weight:600;font-size:.95rem}
+footer{margin-top:auto;padding-top:32px;text-align:center;color:var(--muted);font-size:.82rem}
+
+.tasks{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.th{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.th h2{margin:0;font-size:1.3rem}
+.date{color:var(--muted);font-size:.88rem}
+.prog{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:.88rem;color:var(--muted)}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.add{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.add input[type=text]{flex:1 1 220px;min-width:0;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.add select,.add input[type=time]{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.btn{font:inherit;font-weight:600;padding:10px 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+.sugg{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.sugg button{font:inherit;font-size:.82rem;padding:5px 12px;border-radius:99px;border:1px dashed var(--line);background:none;color:var(--muted);cursor:pointer}
+.grp{margin-top:16px}
+.grp h3{margin:0 0 6px;font-size:.92rem;color:var(--muted);font-weight:600}
+ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tl li{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.tl input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.tl .tx{flex:1;min-width:0;overflow-wrap:anywhere}
+.tl li.done .tx{text-decoration:line-through;color:var(--muted)}
+.tl .tm{font-size:.8rem;color:var(--accent);background:var(--soft);padding:1px 8px;border-radius:99px;flex:none}
+.tl .late{color:#b3261e;background:#fbe9e7}
+.tl .x{border:0;background:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:2px 6px;flex:none}
+.empty{color:var(--muted);font-size:.88rem;padding:6px 2px}
+
+
+.alert{display:flex;align-items:center;gap:12px;background:#fdf0d9;color:#13292b;border:1px solid #9a5b00;border-radius:14px;padding:14px 18px;margin-bottom:16px;text-decoration:none}
+.alert b{color:#9a5b00;font-size:1.15rem}
+.alert .go2{margin-inline-start:auto;font-weight:600;color:#9a5b00;white-space:nowrap}
+@media (prefers-color-scheme:dark){.alert{background:#3a2b14;color:#e4eeee;border-color:#f2b45a}.alert b,.alert .go2{color:#f2b45a}}
+.stat{font-size:.85rem;color:var(--accent);background:var(--soft);padding:2px 10px;border-radius:99px;align-self:flex-start}
+@media (prefers-reduced-motion:reduce){a.tile{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="k">وزارة التجارة – فرع منطقة الجوف</div>
+    <h1>بوابة الخدمات</h1>
+    <p>اختر الخدمة اللي تبيها</p>
+  </header>
+  <a class="alert" id="due" href="/" hidden></a>
+  <main class="grid">
+    <a class="tile" href="/">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="M9 12h6M9 16h4"/></svg></span>
+      <h2>بلاغاتي</h2>
+      <p>تسجيل البلاغات ومتابعتها وتذكيرات المواعيد.</p>
+      <span class="stat" id="bstat" hidden></span>
+      <span class="go">فتح بلاغاتي ←</span>
+    </a>
+    <a class="tile" href="https://dalil-dusky.vercel.app">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6"/><path d="M16 5.5h4.5M16 9.5h4.5M17.5 13.5h3"/></svg></span>
+      <h2>دليل الموظف</h2>
+      <p>إيميلات الزملاء وتحويلاتهم، وضباط اتصال الوكالات التجارية والمتاجر.</p>
+      <span class="go">فتح الدليل ←</span>
+    </a>
+  </main>
+  <section class="tasks" aria-labelledby="tt">
+    <div class="th"><h2 id="tt">مهامي اليوم</h2><span class="date" id="today"></span></div>
+    <div class="prog"><div class="bar"><i id="pbar"></i></div><span id="ptxt"></span></div>
+    <form class="add" id="addf" autocomplete="off">
+      <input type="text" id="tin" placeholder="أضف مهمة… مثل: متابعة البلاغات المتأخرة" aria-label="المهمة">
+      <select id="tkind" aria-label="نوع المهمة"><option value="once">لمرة واحدة</option><option value="daily">يومية متكررة</option></select>
+      <input type="time" id="ttime" aria-label="الوقت (اختياري)">
+      <button class="btn" type="submit">إضافة</button>
+    </form>
+    <div class="sugg" id="sugg"></div>
+    <div class="grp"><h3>مهام يومية متكررة</h3><ul class="tl" id="ld"></ul></div>
+    <div class="grp"><h3>مهام اليوم</h3><ul class="tl" id="lo"></ul></div>
+  </section>
+  <footer>جميع الحقوق محفوظة © م. سعد حاكم الرويلي 2026</footer>
+</div>
+
+<script>
+(function(){
+const K="bawaba-tasks";const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const day=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+let S={tasks:[]};try{S=JSON.parse(localStorage.getItem(K))||S}catch(_){}
+if(!Array.isArray(S.tasks))S.tasks=[];
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(_){}};
+const SUG=["مراجعة البلاغات الجديدة","متابعة البلاغات المتأخرة","الرد على الإيميلات","تحديث بيانات الجولات الميدانية","مراجعة تقارير الأسعار"];
+function fmtDate(){
+  const d=new Date();let g="",hj="";
+  try{g=d.toLocaleDateString("ar-SA-u-ca-gregory-nu-latn",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}catch(_){g=day()}
+  try{hj=d.toLocaleDateString("ar-SA-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"long",year:"numeric"})}catch(_){}
+  return g+(hj?" · "+hj:"");
+}
+function isDone(t){return t.kind==="daily"?t.doneOn===day():!!t.done}
+function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function li(t){const dn=isDone(t),late=t.time&&!dn&&t.time<nowHM();
+  return `<li class="${dn?"done":""}" data-id="${t.id}"><input type="checkbox" ${dn?"checked":""} aria-label="تم"><span class="tx">${esc(t.text)}</span>${t.time?`<span class="tm${late?" late":""}">${esc(t.time)}</span>`:""}<button class="x" type="button" aria-label="حذف المهمة">×</button></li>`}
+function render(){
+  $("#today").textContent=fmtDate();
+  const today=day();
+  // drop one-off tasks finished on earlier days
+  S.tasks=S.tasks.filter(t=>!(t.kind==="once"&&t.done&&t.doneOn&&t.doneOn<today));
+  const by=(a,b)=>(a.time||"99")<(b.time||"99")?-1:1;
+  const D=S.tasks.filter(t=>t.kind==="daily").sort(by),O=S.tasks.filter(t=>t.kind!=="daily").sort(by);
+  $("#ld").innerHTML=D.length?D.map(li).join(""):`<li class="empty" style="border:0;background:none">ما فيه مهام يومية. اختر «يومية متكررة» عند الإضافة، وتتجدد كل يوم.</li>`;
+  $("#lo").innerHTML=O.length?O.map(li).join(""):`<li class="empty" style="border:0;background:none">ما فيه مهام لليوم.</li>`;
+  const all=S.tasks.length,done=S.tasks.filter(isDone).length;
+  $("#pbar").style.width=all?Math.round(done/all*100)+"%":"0";
+  $("#ptxt").textContent=all?`${done} من ${all} مكتملة`:"";
+  const have=new Set(S.tasks.map(t=>t.text));
+  $("#sugg").innerHTML=SUG.filter(s=>!have.has(s)).map(s=>`<button type="button" data-s="${esc(s)}">+ ${esc(s)}</button>`).join("");
+  save();
+}
+$("#addf").addEventListener("submit",e=>{e.preventDefault();const v=$("#tin").value.trim();if(!v)return;
+  S.tasks.push({id:Date.now().toString(36),text:v,kind:$("#tkind").value,time:$("#ttime").value||""});
+  $("#tin").value="";$("#ttime").value="";render();$("#tin").focus()});
+document.addEventListener("click",e=>{
+  const s=e.target.closest("[data-s]");if(s){S.tasks.push({id:Date.now().toString(36),text:s.dataset.s,kind:"daily",time:""});render();return}
+  const l=e.target.closest(".tl li[data-id]");if(!l)return;const t=S.tasks.find(x=>x.id===l.dataset.id);if(!t)return;
+  if(e.target.closest(".x")){S.tasks=S.tasks.filter(x=>x!==t);render();return}
+  if(e.target.matches("input[type=checkbox]")){
+    if(t.kind==="daily")t.doneOn=e.target.checked?day():"";else{t.done=e.target.checked;t.doneOn=e.target.checked?day():""}
+    render()}
+});
+render();setInterval(render,60000);
+})();
+</script>
+
+<script>
+(function(){
+  let B=[];try{B=JSON.parse(localStorage.getItem("balaghati-data"))||[]}catch(_){}
+  if(!Array.isArray(B)||!B.length)return;
+  const t=new Date();t.setHours(0,0,0,0);
+  const due=B.filter(b=>b&&b.hala==="TATHKEER"&&(!b.tarikh||new Date(b.tarikh+"T00:00:00")<=t)).length;
+  const open=B.filter(b=>b&&b.hala!=="MOGHLAQ").length;
+  const s=document.getElementById("bstat");s.textContent=`${open} بلاغ مفتوح`;s.hidden=false;
+  if(due){const a=document.getElementById("due");a.innerHTML=`<span>لديك <b>${due}</b> ${due===1?"بلاغ يحتاج تذكير":"بلاغات تحتاج تذكير"} اليوم</span><span class="go2">فتح بلاغاتي ←</span>`;a.hidden=false}
+})();
+</script>
+</body>
+</html>
