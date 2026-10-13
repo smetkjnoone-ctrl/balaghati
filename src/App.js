@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 const ANWA3 = ["رقابة", "وكالات", "متاجر"];
 const HALAT = { MOTABA3A: "متابعة", TATHKEER: "تذكير", MOGHLAQ: "مغلق" };
@@ -25,14 +25,24 @@ function isOverdueOrToday(dateStr) {
 }
 
 export default function App() {
-  const [balaghat, setBalaghat] = useState([]);
+  const [balaghat, setBalaghat] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("balaghati-data")) || []; } catch (e) { return []; }
+  });
   const [filterHala, setFilterHala] = useState("الكل");
   const [filterNoo3, setFilterNoo3] = useState("الكل");
   const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [dateInput, setDateInput] = useState("");
   const [confirmDeleteDay, setConfirmDeleteDay] = useState(false);
-  const [muraqibName, setMuraqibName] = useState("");
+  const [muraqibName, setMuraqibName] = useState(() => {
+    try { return localStorage.getItem("balaghati-name") || ""; } catch (e) { return ""; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("balaghati-data", JSON.stringify(balaghat)); } catch (e) {}
+  }, [balaghat]);
+  useEffect(() => {
+    try { localStorage.setItem("balaghati-name", muraqibName); } catch (e) {}
+  }, [muraqibName]);
   const [showAlert, setShowAlert] = useState(true);
 
   const [form, setForm] = useState({
@@ -146,6 +156,12 @@ export default function App() {
           .print-only { display: block !important; }
         }
         .print-only { display: none; }
+        :root{--bg:#f3f6f6;--surface:#ffffff;--fg:#13292b;--muted:#5d7173;--line:#dbe4e4;--accent:#0d6e6e;--accent-soft:#e2f1f0;--chip:#eaf0f0;--warn:#9a5b00;--warn-soft:#fdf0d9;--danger:#b3261e;--danger-soft:#fbe9e7}
+        @media (prefers-color-scheme:dark){:root{--bg:#0f1819;--surface:#162324;--fg:#e4eeee;--muted:#93a8aa;--line:#24393a;--accent:#4fc2bd;--accent-soft:#183a3a;--chip:#1d2e2f;--warn:#f2b45a;--warn-soft:#3a2b14;--danger:#f2867d;--danger-soft:#3a1f1d;color-scheme:dark}}
+        body{margin:0;background:var(--bg)}
+        .app-root input,.app-root select,.app-root textarea,.app-root button{font-family:inherit}
+        .app-root input:focus,.app-root select:focus,.app-root textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+        .app-root button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       `}</style>
       <div className="print-only" style={styles.printArea}>
         <h1 style={styles.printTitle}>قائمة أرقام البلاغات</h1>
@@ -176,13 +192,14 @@ export default function App() {
       <div className="app-root">
       <header style={styles.header}>
         <div>
+          <div style={styles.headerEyebrow}>وزارة التجارة – فرع منطقة الجوف</div>
+          <div style={styles.headerName}>بلاغاتي</div>
           <input
             style={styles.muraqibNameInput}
             value={muraqibName}
             onChange={(e) => setMuraqibName(e.target.value)}
             placeholder="اكتب اسمك هنا"
           />
-          <div style={styles.headerName}>بلاغاتي</div>
         </div>
         <div style={styles.headerStats}>
           <div style={styles.headerDate}>{todayDMY()}</div>
@@ -415,7 +432,7 @@ export default function App() {
         </section>
       </main>
       <footer style={styles.footer}>
-        © {new Date().getFullYear()} جميع الحقوق محفوظة — سعد بن حاكم الرويلي
+        جميع الحقوق محفوظة © م. سعد حاكم الرويلي {new Date().getFullYear()}
       </footer>
       </div>
     </div>
@@ -423,82 +440,89 @@ export default function App() {
 }
 
 const colors = {
-  bg: "#F8F7F2",
-  navy: "#0C5C3D",
-  navySoft: "#0F7A4F",
-  teal: "#0C5C3D",
-  tealBg: "#E1EEE6",
-  amber: "#A87C1F",
-  amberBg: "#F3E9D2",
-  gray: "#7C7A6E",
-  border: "#DCD8C8",
-  card: "#FFFFFF",
-  text: "#1A1A1A",
-  danger: "#9C4A3A",
+  bg: "var(--bg)",
+  navy: "var(--accent)",
+  navySoft: "var(--muted)",
+  teal: "var(--accent)",
+  tealBg: "var(--accent-soft)",
+  amber: "var(--warn)",
+  amberBg: "var(--warn-soft)",
+  gray: "var(--muted)",
+  border: "var(--line)",
+  card: "var(--surface)",
+  text: "var(--fg)",
+  danger: "var(--danger)",
 };
 
 const styles = {
   page: {
     minHeight: "100vh",
     background: colors.bg,
-    fontFamily: "system-ui, -apple-system, sans-serif",
+    fontFamily: '"IBM Plex Sans Arabic", Tahoma, "Segoe UI", sans-serif',
+    lineHeight: 1.6,
     color: colors.text,
   },
   header: {
-    background: colors.navy,
-    padding: "20px 28px",
+    maxWidth: 900,
+    margin: "0 auto",
+    padding: "32px 20px 8px",
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    borderBottom: `3px solid ${colors.amber}`,
+    alignItems: "flex-end",
+    flexWrap: "wrap",
+    gap: 12,
   },
-  headerEyebrow: { color: "#9FB0BE", fontSize: 12, fontWeight: 500, marginBottom: 2 },
-  headerName: { color: "#fff", fontSize: 18, fontWeight: 600 },
+  headerEyebrow: { color: colors.navy, fontSize: 14, fontWeight: 600, marginBottom: 2 },
+  headerName: { color: colors.text, fontSize: 30, fontWeight: 700, lineHeight: 1.3 },
   muraqibNameInput: {
     background: "transparent",
     border: "none",
-    borderBottom: "1px dashed #7FA894",
-    color: "#D9EDE1",
-    fontSize: 12,
+    borderBottom: `1px dashed ${colors.border}`,
+    color: colors.gray,
+    fontSize: 14,
     fontWeight: 500,
     padding: "0 0 2px 0",
-    marginBottom: 4,
-    outline: "none",
-    width: 160,
+    marginTop: 4,
+    width: 200,
     fontFamily: "inherit",
   },
   headerStats: { textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 },
-  headerDate: { color: "#D9EDE1", fontSize: 13, fontWeight: 500 },
-  headerCount: { color: colors.amberBg, fontSize: 13, fontWeight: 600 },
+  headerDate: { color: colors.gray, fontSize: 14, fontWeight: 500 },
+  headerCount: { color: colors.navy, background: colors.tealBg, fontSize: 13, fontWeight: 600, padding: "2px 10px", borderRadius: 999 },
   alertBanner: {
     background: colors.amberBg,
-    borderBottom: `1px solid ${colors.amber}`,
-    padding: "12px 28px",
+    border: `1px solid ${colors.amber}`,
+    borderRadius: 12,
+    padding: "12px 18px",
+    maxWidth: 860,
+    width: "calc(100% - 40px)",
+    boxSizing: "border-box",
+    margin: "16px auto 0",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  alertText: { color: "#5C3D1F", fontSize: 14 },
+  alertText: { color: colors.text, fontSize: 14 },
   alertCount: { color: colors.amber, fontSize: 16 },
-  alertClose: { background: "none", border: "none", cursor: "pointer", color: "#5C3D1F", fontSize: 14 },
-  main: { maxWidth: 900, margin: "0 auto", padding: "28px 20px 60px" },
+  alertClose: { background: "none", border: "none", cursor: "pointer", color: colors.text, fontSize: 14 },
+  main: { maxWidth: 900, margin: "0 auto", padding: "20px 20px 40px" },
   footer: {
     textAlign: "center",
     padding: "16px 20px 28px",
     fontSize: 12,
     color: colors.gray,
     borderTop: `1px solid ${colors.border}`,
-    maxWidth: 900,
+    maxWidth: 860,
     margin: "0 auto",
   },
   formSection: {
     background: colors.card,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
     padding: 24,
     marginBottom: 28,
   },
-  sectionTitle: { fontSize: 16, fontWeight: 700, color: colors.navy, margin: "0 0 16px 0" },
+  sectionTitle: { fontSize: 18, fontWeight: 700, color: colors.text, margin: "0 0 16px 0" },
   form: { display: "flex", flexDirection: "column", gap: 14 },
   formRow: { display: "flex", gap: 14, flexWrap: "wrap" },
   label: {
@@ -515,7 +539,7 @@ const styles = {
     padding: "10px 12px",
     fontSize: 14,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
     textAlign: "right",
     outline: "none",
     color: colors.text,
@@ -524,17 +548,17 @@ const styles = {
     padding: "10px 12px",
     fontSize: 14,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
     textAlign: "right",
     outline: "none",
-    background: "#fff",
+    background: colors.bg,
     color: colors.text,
   },
   textarea: {
     padding: "10px 12px",
     fontSize: 14,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
     textAlign: "right",
     outline: "none",
     resize: "vertical",
@@ -546,9 +570,9 @@ const styles = {
     fontSize: 14,
     fontWeight: 600,
     background: colors.navy,
-    color: "#fff",
+    color: "var(--surface)",
     border: "none",
-    borderRadius: 4,
+    borderRadius: 10,
     cursor: "pointer",
   },
   listSection: {},
@@ -557,10 +581,10 @@ const styles = {
     padding: "8px 16px",
     fontSize: 13,
     fontWeight: 600,
-    background: "#fff",
+    background: colors.card,
     color: colors.navy,
     border: `1px solid ${colors.navy}`,
-    borderRadius: 4,
+    borderRadius: 10,
     cursor: "pointer",
   },
   searchRow: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" },
@@ -569,27 +593,27 @@ const styles = {
     padding: "9px 12px",
     fontSize: 14,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
     textAlign: "right",
     outline: "none",
     color: colors.text,
-    background: "#fff",
+    background: colors.card,
   },
   filters: { display: "flex", gap: 8, flexWrap: "wrap" },
   dateFilterInput: {
     padding: "9px 10px",
     fontSize: 13,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
-    background: "#fff",
+    borderRadius: 10,
+    background: colors.card,
     color: colors.text,
   },
   clearDateBtn: {
     padding: "8px 12px",
     fontSize: 12,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
-    background: "#fff",
+    borderRadius: 10,
+    background: colors.card,
     color: colors.navySoft,
     cursor: "pointer",
   },
@@ -598,8 +622,8 @@ const styles = {
     fontSize: 12,
     fontWeight: 600,
     border: `1px solid ${colors.danger}`,
-    borderRadius: 4,
-    background: "#fff",
+    borderRadius: 10,
+    background: colors.card,
     color: colors.danger,
     cursor: "pointer",
   },
@@ -608,8 +632,8 @@ const styles = {
     fontSize: 12,
     fontWeight: 600,
     border: `1px solid ${colors.navy}`,
-    borderRadius: 4,
-    background: "#fff",
+    borderRadius: 10,
+    background: colors.card,
     color: colors.navy,
     cursor: "pointer",
   },
@@ -619,9 +643,9 @@ const styles = {
     fontSize: 12,
     fontWeight: 600,
     border: "none",
-    borderRadius: 4,
+    borderRadius: 10,
     background: colors.danger,
-    color: "#fff",
+    color: "var(--surface)",
     cursor: "pointer",
   },
   printArea: { padding: 24 },
@@ -631,7 +655,7 @@ const styles = {
   printTh: { border: "1px solid #999", padding: "6px 10px", background: "#eee", fontSize: 13, textAlign: "right" },
   printTd: { border: "1px solid #999", padding: "6px 10px", fontSize: 13, textAlign: "right" },
   printFooter: { marginTop: 20, fontSize: 11, color: "#555", textAlign: "center" },
-  filterSelect: { padding: "7px 10px", fontSize: 13, border: `1px solid ${colors.border}`, borderRadius: 4, background: "#fff", color: colors.navySoft },
+  filterSelect: { padding: "7px 10px", fontSize: 13, border: `1px solid ${colors.border}`, borderRadius: 10, background: colors.card, color: colors.navySoft },
   empty: {
     padding: "40px 20px",
     textAlign: "center",
@@ -639,13 +663,13 @@ const styles = {
     fontSize: 14,
     background: colors.card,
     border: `1px dashed ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
   },
   tableWrap: { display: "flex", flexDirection: "column", gap: 10 },
   row: {
     background: colors.card,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
+    borderRadius: 10,
     padding: "16px 18px",
     display: "flex",
     justifyContent: "space-between",
@@ -656,22 +680,22 @@ const styles = {
   rowMain: { flex: "1 1 400px" },
   rowTop: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" },
   raqmBadge: { fontWeight: 700, color: colors.navy, fontSize: 15 },
-  noo3Badge: { fontSize: 12, padding: "3px 10px", borderRadius: 3, background: "#EFECE3", color: colors.navySoft },
-  halaBadge: { fontSize: 12, padding: "3px 10px", borderRadius: 3, fontWeight: 600 },
+  noo3Badge: { fontSize: 12, padding: "3px 10px", borderRadius: 999, background: "var(--chip)", color: colors.navySoft },
+  halaBadge: { fontSize: 12, padding: "3px 10px", borderRadius: 999, fontWeight: 600 },
   halaMotaba3a: { background: colors.tealBg, color: colors.teal },
   halaTathkeer: { background: colors.amberBg, color: colors.amber },
-  halaMoghlaq: { background: "#EAEAEA", color: "#6B6B6B" },
-  dueTag: { fontSize: 11, padding: "2px 8px", borderRadius: 3, background: colors.danger, color: "#fff", fontWeight: 600 },
+  halaMoghlaq: { background: "var(--chip)", color: colors.gray },
+  dueTag: { fontSize: 11, padding: "2px 8px", borderRadius: 999, background: colors.danger, color: "var(--surface)", fontWeight: 600 },
   ijraaText: { fontSize: 14, color: colors.text, lineHeight: 1.6, marginBottom: 6 },
   rowMeta: { fontSize: 12, color: colors.gray },
   rowActions: { display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" },
-  rowSelect: { padding: "6px 10px", fontSize: 13, border: `1px solid ${colors.border}`, borderRadius: 4, background: "#fff", color: colors.navySoft },
+  rowSelect: { padding: "6px 10px", fontSize: 13, border: `1px solid ${colors.border}`, borderRadius: 10, background: colors.card, color: colors.navySoft },
   deleteBtn: {
     padding: "6px 10px",
     fontSize: 12,
     border: `1px solid ${colors.border}`,
-    borderRadius: 4,
-    background: "#fff",
+    borderRadius: 10,
+    background: colors.card,
     color: colors.danger,
     cursor: "pointer",
   },
