@@ -1,14 +1,18 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { downloadXlsx } from "./xlsx";
 
 const ANWA3 = ["رقابة", "وكالات", "متاجر"];
 const HALAT = { MOTABA3A: "متابعة", TATHKEER: "تذكير", MOGHLAQ: "مغلق" };
+const MAIL_FOR_HALA = { MOTABA3A: "إحالة بلاغ", TATHKEER: "تذكير", MOGHLAQ: "إغلاق بلاغ" };
+const facKey = (n) => (window.dalilKey ? window.dalilKey(n) : String(n || "").trim());
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function todayDMY() {
@@ -30,7 +34,13 @@ export default function App() {
   });
   const [filterHala, setFilterHala] = useState("الكل");
   const [filterNoo3, setFilterNoo3] = useState("الكل");
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get("q") || ""; } catch (e) { return ""; }
+  });
+  const [facilities, setFacilities] = useState([]);
+  const [linkFor, setLinkFor] = useState(null);
+  const [linkText, setLinkText] = useState("");
+  const [mailType, setMailType] = useState({});
   const [filterDate, setFilterDate] = useState("");
   const [dateInput, setDateInput] = useState("");
   const [confirmDeleteDay, setConfirmDeleteDay] = useState(false);
@@ -44,6 +54,15 @@ export default function App() {
     try { localStorage.setItem("balaghati-name", muraqibName); } catch (e) {}
   }, [muraqibName]);
   const [showAlert, setShowAlert] = useState(true);
+  useEffect(() => {
+    if (window.loadDalil) window.loadDalil((d) => setFacilities(window.dalilFacilities(d)));
+  }, []);
+  const facMap = useMemo(() => {
+    const m = new Map();
+    facilities.forEach((f) => m.set(f.key, f));
+    return m;
+  }, [facilities]);
+  const findFac = (name) => (name ? facMap.get(facKey(name)) : null);
 
   const [form, setForm] = useState({
     raqm: "",
@@ -51,6 +70,7 @@ export default function App() {
     ijraa: "",
     hala: "MOTABA3A",
     tarikh: "",
+    munsha: "",
   });
 
   function addBalagh(e) {
@@ -63,14 +83,25 @@ export default function App() {
       ijraa: form.ijraa.trim(),
       hala: form.hala,
       tarikh: form.tarikh || null,
+      munsha: form.munsha.trim(),
       createdAt: todayISO(),
     };
     setBalaghat([entry, ...balaghat]);
-    setForm({ raqm: "", noo3: ANWA3[0], ijraa: "", hala: "MOTABA3A", tarikh: "" });
+    setForm({ raqm: "", noo3: ANWA3[0], ijraa: "", hala: "MOTABA3A", tarikh: "", munsha: "" });
   }
 
   function updateHala(id, newHala) {
     setBalaghat(balaghat.map((b) => (b.id === id ? { ...b, hala: newHala } : b)));
+  }
+
+  function setMunsha(id, name) {
+    setBalaghat(balaghat.map((b) => (b.id === id ? { ...b, munsha: name.trim() } : b)));
+  }
+
+  function exportExcel() {
+    const rows = filtered.map((b) => [b.raqm, b.noo3, b.munsha || "", b.ijraa, HALAT[b.hala], b.tarikh || "", b.createdAt || ""]);
+    const d = todayISO();
+    downloadXlsx(`Balaghati_${d}.xlsx`, "البلاغات", ["رقم البلاغ", "القسم", "المنشأة", "الإجراء المتخذ", "الحالة", "تاريخ الاستحقاق", "تاريخ التسجيل"], rows, [14, 12, 30, 50, 10, 16, 16]);
   }
 
   function deleteBalagh(id) {
@@ -88,7 +119,7 @@ export default function App() {
       if (filterHala !== "الكل" && b.hala !== filterHala) return false;
       if (filterNoo3 !== "الكل" && b.noo3 !== filterNoo3) return false;
       if (filterDate && b.createdAt !== filterDate) return false;
-      if (q && !(b.raqm.toLowerCase().includes(q) || b.ijraa.toLowerCase().includes(q))) return false;
+      if (q && !(b.raqm.toLowerCase().includes(q) || b.ijraa.toLowerCase().includes(q) || String(b.munsha || "").toLowerCase().includes(q))) return false;
       return true;
     });
   }, [balaghat, filterHala, filterNoo3, filterDate, searchText]);
@@ -190,10 +221,15 @@ export default function App() {
       </div>
 
       <div className="app-root">
-      <a href="/portal.html" style={styles.backLink}>
+      <div style={styles.backWrap}><a href="/portal.html" style={styles.backLink}>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
         رجوع للبوابة
-      </a>
+      </a></div>
+      <datalist id="facList">
+        {facilities.map((f) => (
+          <option key={f.key} value={f.name} />
+        ))}
+      </datalist>
       <header style={styles.header}>
         <div>
           <div style={styles.headerEyebrow}>وزارة التجارة – فرع منطقة الجوف</div>
@@ -255,6 +291,23 @@ export default function App() {
             </div>
 
             <label style={styles.labelFull}>
+              المنشأة (اختياري)
+              <input
+                style={styles.input}
+                list="facList"
+                value={form.munsha}
+                onChange={(e) => setForm({ ...form, munsha: e.target.value })}
+                placeholder={facilities.length ? "اكتب أول حروف اسم المنشأة واختر من القائمة" : "اسم المنشأة"}
+                autoComplete="off"
+              />
+              {form.munsha && findFac(form.munsha) && (
+                <span style={styles.facHint}>
+                  مرتبطة بدليل الموظف · {findFac(form.munsha).emails.length} إيميل
+                </span>
+              )}
+            </label>
+
+            <label style={styles.labelFull}>
               الإجراء المتخذ
               <textarea
                 style={styles.textarea}
@@ -302,9 +355,14 @@ export default function App() {
         <section style={styles.listSection}>
           <div style={styles.listHeader}>
             <h2 style={styles.sectionTitle}>سجل البلاغات ({filtered.length})</h2>
-            <button style={styles.exportBtn} onClick={exportPDF}>
-              تصدير PDF
-            </button>
+            <div style={styles.exportGroup}>
+              <button style={styles.exportBtn} onClick={exportExcel}>
+                تصدير Excel
+              </button>
+              <button style={styles.exportBtn} onClick={exportPDF}>
+                تصدير PDF
+              </button>
+            </div>
           </div>
 
           <div style={styles.searchRow}>
@@ -312,7 +370,7 @@ export default function App() {
               style={styles.searchInput}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              placeholder="بحث برقم البلاغ أو الإجراء…"
+              placeholder="بحث برقم البلاغ أو الإجراء أو المنشأة…"
             />
             <input
               type="date"
@@ -410,10 +468,82 @@ export default function App() {
                         <span style={styles.dueTag}>مستحق</span>
                       )}
                     </div>
+                    {b.munsha && <div style={styles.facLine}>{b.munsha}</div>}
                     <div style={styles.ijraaText}>{b.ijraa}</div>
                     <div style={styles.rowMeta}>
                       {b.tarikh ? `الاستحقاق: ${b.tarikh}` : "بدون تاريخ استحقاق"}
                     </div>
+                    {(() => {
+                      const fac = findFac(b.munsha);
+                      if (fac && fac.emails.length && linkFor !== b.id) {
+                        const t = mailType[b.id] || MAIL_FOR_HALA[b.hala] || "إحالة بلاغ";
+                        return (
+                          <div style={styles.mailRow}>
+                            <select
+                              style={styles.rowSelect}
+                              value={t}
+                              aria-label="نوع الإيميل"
+                              onChange={(e) => setMailType({ ...mailType, [b.id]: e.target.value })}
+                            >
+                              {(window.DALIL_MAIL_TYPES || []).map((x) => (
+                                <option key={x}>{x}</option>
+                              ))}
+                            </select>
+                            <a style={styles.mailBtn} href={window.dalilMailHref(fac, b.raqm, t)}>
+                              إرسال إيميل للمنشأة ({fac.emails.length})
+                            </a>
+                            <button
+                              type="button"
+                              style={{ ...styles.linkBtn, marginTop: 0 }}
+                              onClick={() => {
+                                setLinkFor(b.id);
+                                setLinkText(b.munsha || "");
+                              }}
+                            >
+                              تغيير المنشأة
+                            </button>
+                          </div>
+                        );
+                      }
+                      if (linkFor === b.id) {
+                        return (
+                          <form
+                            style={styles.mailRow}
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              setMunsha(b.id, linkText);
+                              setLinkFor(null);
+                              setLinkText("");
+                            }}
+                          >
+                            <input
+                              style={{ ...styles.input, flex: "1 1 200px", padding: "6px 10px" }}
+                              list="facList"
+                              value={linkText}
+                              onChange={(e) => setLinkText(e.target.value)}
+                              placeholder="اسم المنشأة"
+                              aria-label="اسم المنشأة"
+                              autoFocus
+                              autoComplete="off"
+                            />
+                            <button type="submit" style={styles.mailBtn}>ربط</button>
+                            <button type="button" style={styles.linkBtn} onClick={() => setLinkFor(null)}>إلغاء</button>
+                          </form>
+                        );
+                      }
+                      return (
+                        <button
+                          type="button"
+                          style={styles.linkBtn}
+                          onClick={() => {
+                            setLinkFor(b.id);
+                            setLinkText(b.munsha || "");
+                          }}
+                        >
+                          {!b.munsha ? "+ ربط بمنشأة" : fac ? "تغيير المنشأة (ما لها إيميل في الدليل)" : "تغيير المنشأة (غير موجودة في الدليل)"}
+                        </button>
+                      );
+                    })()}
                   </div>
                   <div style={styles.rowActions}>
                     <select
@@ -476,7 +606,14 @@ const styles = {
     flexWrap: "wrap",
     gap: 12,
   },
-  backLink: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", textDecoration: "none", padding: "6px 12px 6px 10px", borderRadius: 999, margin: "16px 20px 0" },
+  backWrap: { maxWidth: 900, margin: "0 auto", padding: "16px 20px 0" },
+  facHint: { fontSize: 12, color: "var(--accent)", fontWeight: 600 },
+  facLine: { fontSize: 14, fontWeight: 600, color: colors.text, marginBottom: 4 },
+  mailRow: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 10 },
+  mailBtn: { padding: "7px 14px", fontSize: 13, fontWeight: 600, background: "var(--accent)", color: "var(--surface)", border: "1px solid var(--accent)", borderRadius: 10, textDecoration: "none", cursor: "pointer", fontFamily: "inherit" },
+  linkBtn: { marginTop: 8, padding: 0, background: "none", border: "none", color: "var(--accent)", fontSize: 13, fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, fontFamily: "inherit" },
+  exportGroup: { display: "flex", gap: 8, flexWrap: "wrap" },
+  backLink: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", textDecoration: "none", padding: "6px 12px 6px 10px", borderRadius: 999 },
   headerEyebrow: { color: colors.navy, fontSize: 14, fontWeight: 600, marginBottom: 2 },
   headerName: { color: colors.text, fontSize: 30, fontWeight: 700, lineHeight: 1.3 },
   muraqibNameInput: {
