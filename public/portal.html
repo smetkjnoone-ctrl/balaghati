@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" href="/icon-192.png">
 <title>بوابة الخدمات</title>
+<script src="/dalil-data.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
 :root{--bg:#f3f6f6;--surface:#fff;--fg:#13292b;--muted:#5d7173;--line:#dbe4e4;--accent:#0d6e6e;--soft:#e2f1f0;--f:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif}
@@ -64,6 +65,21 @@ ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:
 
 
 [hidden]{display:none!important}
+.srch{margin-bottom:16px}
+.sbox{position:relative}
+.srch input{width:100%;font:inherit;font-size:1rem;padding:13px 44px 13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.srch input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.sbox .si{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--muted);pointer-events:none}
+.res{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px;max-height:60vh;overflow:auto}
+.res h3{margin:8px 10px 4px;font-size:.8rem;color:var(--muted);font-weight:600}
+.res a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;text-decoration:none;color:inherit}
+.res a:hover,.res a:focus-visible{background:var(--soft);outline:none}
+.res .t{flex:1;min-width:0}
+.res .t b{display:block;font-weight:600;overflow-wrap:anywhere}
+.res .t small{display:block;color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
+.res .n{flex:none;font-size:.82rem;direction:ltr;color:var(--accent);background:var(--soft);padding:1px 8px;border-radius:6px}
+.res .more{justify-content:center;color:var(--accent);font-size:.88rem;font-weight:600}
+.res .none{padding:10px;color:var(--muted);font-size:.9rem}
 .alert{display:flex;align-items:center;gap:12px;background:#fdf0d9;color:#13292b;border:1px solid #9a5b00;border-radius:14px;padding:14px 18px;margin-bottom:16px;text-decoration:none}
 .alert b{color:#9a5b00;font-size:1.15rem}
 .alert .go2{margin-inline-start:auto;font-weight:600;color:#9a5b00;white-space:nowrap}
@@ -98,6 +114,11 @@ ul.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:
     <h1>بوابة الخدمات</h1>
     <p>اختر الخدمة اللي تبيها</p>
   </header>
+  <div class="srch" role="search">
+    <div class="sbox"><svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="gq" type="search" placeholder="ابحث برقم بلاغ أو منشأة أو موظف أو جوال…" aria-label="بحث في البلاغات والدليل" autocomplete="off"></div>
+    <div class="res" id="gres" hidden></div>
+  </div>
   <a class="alert" id="due" href="/" hidden></a>
   <section class="stats" aria-label="ملخص البلاغات">
     <a class="st" href="/"><b id="s-open">0</b><span>بلاغ مفتوح</span></a>
@@ -221,7 +242,7 @@ render();setInterval(render,60000);
 (function(){
   let B=[];try{B=JSON.parse(localStorage.getItem("balaghati-data"))||[]}catch(_){}
   if(!Array.isArray(B))B=[];
-  const iso=new Date().toISOString().slice(0,10),t0=new Date();t0.setHours(0,0,0,0);
+  const _d=new Date(),iso=_d.getFullYear()+"-"+String(_d.getMonth()+1).padStart(2,"0")+"-"+String(_d.getDate()).padStart(2,"0"),t0=new Date();t0.setHours(0,0,0,0);
   const dueN=B.filter(b=>b&&b.hala==="TATHKEER"&&(!b.tarikh||new Date(b.tarikh+"T00:00:00")<=t0)).length;
   document.getElementById("s-open").textContent=B.filter(b=>b&&b.hala!=="MOGHLAQ").length;
   document.getElementById("s-due").textContent=dueN;
@@ -258,6 +279,41 @@ render();setInterval(render,60000);
   });
   $("lk").addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(!b)return;L.splice(+b.dataset.i,1);save();render()});
   render();
+})();
+</script>
+<script>
+(function(){
+  const $=s=>document.getElementById(s);
+  const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const lc=s=>String(s||"").toLowerCase();
+  const DALIL="https://dalil-dusky.vercel.app/";
+  const HALA={MOTABA3A:"متابعة",TATHKEER:"تذكير",MOGHLAQ:"مغلق"};
+  let D=[],loading=true;
+  if(window.loadDalil)window.loadDalil(d=>{D=d||[];loading=false;run()}).then(()=>{loading=false;run()});else loading=false;
+  function reports(){try{return JSON.parse(localStorage.getItem("balaghati-data"))||[]}catch(_){return[]}}
+  function run(){
+    const q=lc($("gq").value.trim()),box=$("gres");
+    if(q.length<2){box.hidden=true;box.innerHTML="";return}
+    const R=reports().filter(b=>lc([b.raqm,b.ijraa,b.munsha,b.noo3].join(" ")).includes(q));
+    const seen=new Set(),P=[];
+    for(const p of D){
+      if(!lc([p.name,p.en,p.role,p.dept,p.email,p.ext,p.mob,p.cr,p.alt].join(" ")).includes(q))continue;
+      const ag=p.sec==="الوكالات التجارية والمتاجر",k=ag&&window.dalilKey?window.dalilKey(p.name):p.id;
+      if(seen.has(k))continue;seen.add(k);P.push({p,ag});
+    }
+    let h="";
+    if(R.length){h+=`<h3>البلاغات (${R.length})</h3>`+R.slice(0,5).map(b=>`<a href="/?q=${encodeURIComponent(b.raqm)}"><span class="t"><b>بلاغ #${esc(b.raqm)}${b.munsha?" · "+esc(b.munsha):""}</b><small>${esc(HALA[b.hala]||"")} · ${esc(b.ijraa)}</small></span></a>`).join("");
+      if(R.length>5)h+=`<a class="more" href="/?q=${encodeURIComponent($("gq").value.trim())}">عرض كل النتائج في بلاغاتي</a>`}
+    if(P.length){h+=`<h3>دليل الموظف (${P.length})</h3>`+P.slice(0,6).map(({p,ag})=>{
+        const sub=ag?(p.role||""):[p.role,p.dept].filter(Boolean).join(" · ");
+        const num=ag?(p.mob||""):(p.ext||p.mob||"");
+        return `<a href="${DALIL}?q=${encodeURIComponent(p.name)}"><span class="t"><b>${esc(p.name)}</b><small>${esc(sub)}</small></span>${num?`<span class="n">${esc(num)}</span>`:""}</a>`}).join("");
+      if(P.length>6)h+=`<a class="more" href="${DALIL}?q=${encodeURIComponent($("gq").value.trim())}">عرض كل النتائج في الدليل</a>`}
+    if(!h)h=`<div class="none">${loading&&!D.length?"جاري تحميل الدليل…":"ما فيه نتائج مطابقة."}</div>`;
+    box.innerHTML=h;box.hidden=false;
+  }
+  $("gq").addEventListener("input",run);
+  $("gq").addEventListener("keydown",e=>{if(e.key==="Escape"){$("gq").value="";run()}});
 })();
 </script>
 </body>
