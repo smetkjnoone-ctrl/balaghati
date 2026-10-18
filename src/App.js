@@ -190,6 +190,10 @@ export default function App() {
       </div>
 
       <div className="app-root">
+      <a href="/portal.html" style={styles.backLink}>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+        رجوع للبوابة
+      </a>
       <header style={styles.header}>
         <div>
           <div style={styles.headerEyebrow}>وزارة التجارة – فرع منطقة الجوف</div>
@@ -472,6 +476,7 @@ const styles = {
     flexWrap: "wrap",
     gap: 12,
   },
+  backLink: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", textDecoration: "none", padding: "6px 12px 6px 10px", borderRadius: 999, margin: "16px 20px 0" },
   headerEyebrow: { color: colors.navy, fontSize: 14, fontWeight: 600, marginBottom: 2 },
   headerName: { color: colors.text, fontSize: 30, fontWeight: 700, lineHeight: 1.3 },
   muraqibNameInput: {
